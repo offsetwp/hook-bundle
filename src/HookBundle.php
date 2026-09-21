@@ -54,9 +54,11 @@ final class HookBundle extends Bundle {
 	 * This is the only moment anything is registered, and it is still not the moment
 	 * anything is built: what the platform receives is a closure per handler.
 	 *
-	 * A hook that has already fired by the time a kernel boots will not fire again. That
-	 * is a fact about where a kernel is booted from rather than something this bundle can
-	 * fix, and the README says which hooks it applies to.
+	 * A hook that has already fired by the time a kernel boots will not fire again. That is
+	 * a fact about where a kernel is booted from rather than something this bundle can fix:
+	 * a kernel booted from a theme is past muplugins_loaded and plugins_loaded, and a
+	 * handler declared against either of those will sit there unfired. Boot from a
+	 * mu-plugin when you need them.
 	 *
 	 * @throws \LogicException When the bundle was booted without a container, or without its own service.
 	 * @return void
