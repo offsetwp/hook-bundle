@@ -109,11 +109,14 @@ final class HookRegistrar {
 	 * The flag is set once the work is done and not before, so a registration that failed
 	 * half way can be tried again rather than being remembered as one that worked.
 	 *
-	 * Both functions the platform has to provide are checked, and not only the first of
-	 * them: shortcodes are declared two hundred lines later than actions in the platform's
-	 * own boot, so a kernel booted from a drop-in can be past one and not the other.
+	 * What the platform has to provide is checked first, for every handler and before any
+	 * of them is handed over, so that a failure leaves nothing half registered. It is
+	 * checked handler by handler rather than all at once: shortcodes are declared two
+	 * hundred lines later than actions in the platform's own boot, so a kernel booted from
+	 * a drop-in can be past one and not the other — and a project that declares no
+	 * shortcode has no reason to be refused for a function it never calls.
 	 *
-	 * @throws \LogicException When the platform is not loaded, or a handler cannot be reached.
+	 * @throws \LogicException When the platform cannot take a handler, or one cannot be reached.
 	 * @return void
 	 */
 	public function register(): void {
@@ -121,17 +124,8 @@ final class HookRegistrar {
 			return;
 		}
 
-		foreach ( array( 'add_action', 'add_filter', 'add_shortcode' ) as $platform_function ) {
-			if ( function_exists( $platform_function ) ) {
-				continue;
-			}
-
-			throw new \LogicException(
-				sprintf(
-					'The hook bundle cannot register anything: %s() does not exist, which means this kernel booted before WordPress finished loading, or outside it altogether. Boot it from a mu-plugin, a plugin or a theme, where the platform is already loaded.',
-					$platform_function
-				)
-			);
+		foreach ( $this->handlers as $handler ) {
+			$this->assertPlatformCanTake( $handler );
 		}
 
 		foreach ( $this->handlers as $handler ) {
@@ -139,6 +133,45 @@ final class HookRegistrar {
 		}
 
 		$this->is_registered = true;
+	}
+
+	/**
+	 * Refuses a handler the platform has nothing to take it with, yet.
+	 *
+	 * The three names are written here as well as in hand() below, and deliberately: this
+	 * asks whether a function exists and that one calls it, and the two cannot share a
+	 * call site because the platform takes a shortcode with a different signature.
+	 *
+	 * A handler of a kind nothing produces is left alone. hand() refuses that one, and
+	 * names the class and the method it came from while it does.
+	 *
+	 * @param array<string, mixed> $handler The handler about to be registered.
+	 * @phpstan-param Handler $handler
+	 * @throws \LogicException When the function that would take it does not exist.
+	 * @return void
+	 */
+	private function assertPlatformCanTake( array $handler ): void {
+		$platform_function = match ( $handler['type'] ) {
+			self::TYPE_ACTION => 'add_action',
+			self::TYPE_FILTER => 'add_filter',
+			self::TYPE_SHORT_CODE => 'add_shortcode',
+			default => null,
+		};
+
+		if ( null === $platform_function || function_exists( $platform_function ) ) {
+			return;
+		}
+
+		throw new \LogicException(
+			sprintf(
+				'The hook bundle cannot register the %s "%s" declared by "%s::%s()": %s() does not exist, which means this kernel booted before WordPress finished loading, or outside it altogether. Boot it from a mu-plugin, a plugin or a theme, where the platform is already loaded.',
+				$handler['type'],
+				$handler['hook'],
+				$handler['class'],
+				$handler['method'],
+				$platform_function
+			)
+		);
 	}
 
 	/**
@@ -280,15 +313,14 @@ final class HookRegistrar {
 			);
 		}
 
-		$bound = \Closure::bind( $closure, null, $handler_class );
-
-		if ( ! $bound instanceof \Closure ) {
-			throw new \LogicException(
-				sprintf( 'The handler class "%s" cannot be bound to, so its methods cannot be reached.', $handler_class )
-			);
-		}
-
-		return $bound;
+		/*
+		 * The null coalescing is what the declared return type asks for and nothing more:
+		 * with the check above in place there is no class left that exists, is not one of
+		 * PHP's own, and still cannot be a scope.
+		 */
+		return \Closure::bind( $closure, null, $handler_class ) ?? throw new \LogicException(
+			sprintf( 'The handler class "%s" cannot be bound to, so its methods cannot be reached.', $handler_class )
+		);
 	}
 
 	/**
