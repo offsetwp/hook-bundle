@@ -199,28 +199,6 @@ final class PlatformFunctionsTest extends HookTestCase {
 	}
 
 	/**
-	 * An action clones an object before handing it over, so a handler that mutates what it
-	 * was given changes nothing for whoever fired the hook.
-	 *
-	 * @return void
-	 */
-	public function testAnActionClonesAnObjectItHandsOver(): void {
-		$post       = new \stdClass();
-		$post->name = 'original';
-
-		add_action(
-			'save_post',
-			static function ( \stdClass $given ): void {
-				$given->name = 'changed';
-			}
-		);
-
-		do_action( 'save_post', $post );
-
-		$this->assertSame( 'original', $post->name );
-	}
-
-	/**
 	 * A callback added while a hook is running joins that same run when its priority has
 	 * not been passed yet, and waits for the next run when it has. This is what a kernel
 	 * booted from inside a hook depends on.

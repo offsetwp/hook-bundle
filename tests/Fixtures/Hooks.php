@@ -21,13 +21,19 @@ namespace OffsetWP\Bundle\HookBundle\Tests\Fixtures;
  * would otherwise be passing on a simulation kinder than the thing it stands in for: a
  * lower priority runs first; callbacks of one priority run in the order they were added;
  * each one receives only as many arguments as it said it accepts; an action fired with
- * nothing hands over a single empty string; an action clones an object before handing it
- * over; a callback added while a hook is running runs in that same run when its priority
- * has not been passed yet; and actions and filters are counted apart, because the platform
- * counts them apart and answers about them apart.
+ * nothing hands over a single empty string; a callback added while a hook is running runs
+ * in that same run when its priority has not been passed yet; and actions and filters are
+ * counted apart, because the platform counts them apart and answers about them apart.
  *
  * A shortcode's attributes are an array whatever the post said, which is what the platform
  * has handed over since it stopped handing a bare string for a shortcode written with none.
+ *
+ * One divergence is deliberate, and is written down so that nobody restores it from memory.
+ * An action whose single argument is an array holding one object is unwrapped by the
+ * platform to that object — backward compatibility for a way of writing PHP that predates
+ * everything this package requires. It is not reproduced, because it decides what the
+ * platform hands over rather than what this bundle does with it. What the platform does
+ * *not* do is clone an object before handing it over, and neither does this.
  */
 final class Hooks {
 
@@ -123,9 +129,8 @@ final class Hooks {
 	/**
 	 * Runs every callback of a hook, keeping nothing they return.
 	 *
-	 * An empty argument list becomes a single empty string, and an object first argument
-	 * is cloned: both are what the platform does, and a handler mutating the object it was
-	 * handed would otherwise look effective here and be a no-op in a request.
+	 * An empty argument list becomes a single empty string, which is what the platform hands
+	 * a callback registered against an action that carries no arguments.
 	 *
 	 * @param string                  $hook_name The hook to run.
 	 * @param array<array-key, mixed> $args      The arguments to pass.
@@ -136,8 +141,6 @@ final class Hooks {
 
 		if ( array() === $args ) {
 			$args = array( '' );
-		} elseif ( is_object( $args[0] ) ) {
-			$args[0] = clone $args[0];
 		}
 
 		foreach ( self::walk( $hook_name ) as $registration ) {
