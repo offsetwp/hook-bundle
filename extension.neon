@@ -1,0 +1,13 @@
+# What a project includes so that its static analyser stops reporting every hook handler
+# as dead code. Nothing in PHP calls a handler — the platform does — so a private one
+# reads as unused from the fourth level up.
+#
+# In a project's own phpstan.neon:
+#
+#   includes:
+#     - vendor/offsetwp/hook-bundle/extension.neon
+services:
+	-
+		class: OffsetWP\Bundle\HookBundle\PHPStan\HandlerMethodExtension
+		tags:
+			- phpstan.methods.alwaysUsedMethodExtension

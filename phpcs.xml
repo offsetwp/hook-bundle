@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<ruleset name="OffsetWP Coding Standards">
+	<description>PHPCS</description>
+
+	<arg value="ps"/>
+	<arg name="colors"/>
+	<arg name="extensions" value="php"/>
+
+	<rule ref="WordPress">
+		<exclude name="Universal.NamingConventions.NoReservedKeywordParameterNames.defaultFound" />
+		<exclude name="Universal.Operators.DisallowShortTernary.Found" />
+		<exclude name="WordPress.Files.FileName" />
+		<exclude name="WordPress.NamingConventions.ValidFunctionName.MethodNameInvalid" />
+		<exclude name="WordPress.Security.EscapeOutput.ExceptionNotEscaped" />
+		<exclude name="WordPress.Security.ValidatedSanitizedInput.InputNotSanitized" />
+		<exclude name="WordPress.Security.ValidatedSanitizedInput.InputNotValidated" />
+	</rule>
+
+	<rule ref="Generic.NamingConventions.CamelCapsFunctionName">
+		<properties>
+			<property name="strict" value="true"/>
+		</properties>
+	</rule>
+
+	<!--
+		Added beyond the framework's list, and only for tests. A test is named after the
+		behaviour it protects, and several of those names read "testAPrivateMethodFires"
+		or "testAStaticHandlerIsNeverConstructed", where the leading article puts two
+		capitals side by side and the strict camel-caps rule refuses them. Renaming them
+		would cost more than it buys. The rule stays on for src/.
+	-->
+	<rule ref="Generic.NamingConventions.CamelCapsFunctionName.ScopeNotCamelCaps">
+		<exclude-pattern>tests/*</exclude-pattern>
+	</rule>
+
+	<!--
+		And one more, for one file. tests/wordpress.php declares the platform functions a
+		test process does not have, and their names are the platform's rather than this
+		repository's to choose: add_action() has to be called add_action(). The rule stays
+		on for every other file, tests included.
+	-->
+	<rule ref="Generic.NamingConventions.CamelCapsFunctionName.NotCamelCaps">
+		<exclude-pattern>tests/wordpress.php</exclude-pattern>
+	</rule>
+
+	<!--
+		And the last one, for one file and one hook. A test fires "100%_filter", whose
+		name carries a percent sign on purpose: that is the character the container reads
+		as one of its own parameters, and the test exists to prove it survives. Scoped to
+		that file, so that a badly named hook anywhere else — the fixture projects above
+		all, which are there to look like a project's own — is still refused.
+	-->
+	<rule ref="WordPress.NamingConventions.ValidHookName">
+		<exclude-pattern>tests/Integration/DiscoveryTest.php</exclude-pattern>
+	</rule>
+
+	<!--
+		And one file more. The failure a kernel booted outside the platform gets is the one
+		branch the suite cannot reach from the inside, because its own bootstrap declares
+		the platform functions into every process it starts. The assertion is made in a
+		process of its own, and starting one is what this rule is about.
+	-->
+	<rule ref="WordPress.PHP.DiscouragedPHPFunctions.system_calls_exec">
+		<exclude-pattern>tests/Integration/WithoutThePlatformTest.php</exclude-pattern>
+	</rule>
+
+	<file>src</file>
+	<file>tests</file>
+
+	<exclude-pattern>vendor</exclude-pattern>
+</ruleset>

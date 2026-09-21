@@ -1,0 +1,19 @@
+# The highest level, with no baseline and no ignores.
+#
+# The bundle's own extension is included here as well, because this package declares
+# hooks in its fixtures exactly as a project does. Without it every private handler is
+# reported as unused, which is the report this extension exists to answer.
+#
+# tests/wordpress.php is analysed like everything else, and it is what teaches the
+# analyser the platform functions this bundle calls. There is no stub file and no second
+# declaration of them anywhere: the file the tests run against is the file the analyser
+# reads.
+includes:
+	- extension.neon
+
+parameters:
+	level: max
+	paths:
+		- src
+		- tests
+	tmpDir: .phpstan.cache

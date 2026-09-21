@@ -1,0 +1,87 @@
+{
+	"name": "offsetwp/hook-bundle",
+	"type": "library",
+	"description": "Declare WordPress hooks with PHP attributes on the OffsetWP Framework: one method, one attribute, and the class is only built when the hook fires",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Jérôme Wohlschlegel",
+			"email": "jerome.wohlschlegel@gmail.com"
+		}
+	],
+	"homepage": "https://offsetwp.github.io",
+	"support": {
+		"issues": "https://github.com/offsetwp/hook-bundle/issues",
+		"source": "https://github.com/offsetwp/hook-bundle"
+	},
+	"keywords": [
+		"offsetwp",
+		"wordpress",
+		"hook",
+		"bundle",
+		"attribute",
+		"action",
+		"filter",
+		"shortcode"
+	],
+	"autoload": {
+		"psr-4": {
+			"OffsetWP\\Bundle\\HookBundle\\": "src/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"App\\": "tests/Fixtures/Usage/Site/app/",
+			"OffsetWP\\Bundle\\HookBundle\\Tests\\": "tests/"
+		}
+	},
+	"require": {
+		"php": ">=8.5",
+		"offsetwp/framework": "^1.1",
+		"offsetwp/hook": "^1.1",
+		"psr/container": "^1.1 || ^2.0",
+		"symfony/config": "^8.1",
+		"symfony/dependency-injection": "^8.1"
+	},
+	"require-dev": {
+		"phpstan/phpstan": "^2.2",
+		"phpunit/phpunit": "^13.3",
+		"wp-coding-standards/wpcs": "^3.4.1"
+	},
+	"conflict": {
+		"phpstan/phpstan": "<2.0"
+	},
+	"minimum-stability": "stable",
+	"prefer-stable": true,
+	"scripts": {
+		"lint": "@php vendor/bin/phpcs",
+		"lint:fix": "@php vendor/bin/phpcbf",
+		"stan": "@php vendor/bin/phpstan analyse",
+		"test": "@php vendor/bin/phpunit",
+		"ci": [
+			"@lint",
+			"@stan",
+			"@test"
+		]
+	},
+	"scripts-descriptions": {
+		"lint": "Check the coding standard over src and tests.",
+		"lint:fix": "Fix every coding-standard violation that can be fixed automatically.",
+		"stan": "Run the static analyser over src and tests.",
+		"test": "Run the unit, integration and usage suites.",
+		"ci": "Run the coding standard, the static analyser and the test suites, in that order."
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		},
+		"sort-packages": true
+	},
+	"extra": {
+		"phpstan": {
+			"includes": [
+				"extension.neon"
+			]
+		}
+	}
+}
